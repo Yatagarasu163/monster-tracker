@@ -1,95 +1,59 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client"
+
+import Header from "./components/Header";
+import React, { useState, useEffect, ChangeEvent } from 'react';
+import axios from 'axios';
+
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  const [resultsText, setResultsText] = useState("Loading...");
+  let [searchText, setSearchText] = useState("");
+
+  function onSearchTextChange(event : ChangeEvent<HTMLInputElement>) {
+    const value = event.target.value;
+    setSearchText(value);
+  }
+
+  useEffect(() => {
+    const fetchTitle = setTimeout(
+      async () => {
+        let currentSearchText = "";
+        if(searchText.trim() !== "" || currentSearchText !== searchText){
+          currentSearchText = searchText;
+            try{
+              const res = await axios.get("https://api.open5e.com/monsters/?document__slug__in=wotc-srd&search=" + searchText);
+              console.log("https://api.open5e.com/monsters/?search=" + searchText);
+              console.log(res.data);
+              const resultsArray = res.data.results;
+              let text = ""
+              resultsArray.forEach((instance : Object) => {
+                if(instance.name.toLowerCase().includes(searchText.toLowerCase())){
+                  text += instance.name + "\n";
+                }
+            });
+            
+            setResultsText(text);
+          } catch (err){
+            console.log(err);
+            setResultsText("Error");
+          }
+        }
+        
+      }, 1000
+    )
+
+    return () => clearTimeout(fetchTitle);
+  }, [searchText])
+
+  
+
+  return (
+    <div>
+      <Header />
+
+      <input type="text" name="searchBar" id="searchBar" placeholder="Type a monster's name here!" value={searchText} onChange={onSearchTextChange}/>
+      <p style={{ whiteSpace: "pre"}}>{resultsText}</p>
     </div>
   );
 }
